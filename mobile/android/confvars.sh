@@ -2,8 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOZ_APP_BASENAME=Fennec
-MOZ_APP_VENDOR=Mozilla
+MOZ_APP_BASENAME=Webgenie
+MOZ_APP_VENDOR=Webgenie
 
 MOZ_APP_VERSION=$FIREFOX_VERSION
 MOZ_APP_VERSION_DISPLAY=$FIREFOX_VERSION_DISPLAY
