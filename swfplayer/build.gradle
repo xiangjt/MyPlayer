@@ -6,6 +6,12 @@ apply plugin: 'checkstyle'
 apply plugin: 'com.getkeepsafe.dexcount'
 apply plugin: 'findbugs'
 
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
+
 dexcount {
     format = "tree"
 }
@@ -133,7 +139,7 @@ android {
 
     sourceSets {
         main {
-            manifest.srcFile "${project.buildDir}/generated/source/preprocessed_manifest/AndroidManifest.xml"
+            // manifest.srcFile "${project.buildDir}/generated/source/preprocessed_manifest/AndroidManifest.xml"
 
             aidl {
                 srcDir "${topsrcdir}/mobile/android/base/aidl"
@@ -204,6 +210,8 @@ android {
                 }
                 srcDir "${topsrcdir}/mobile/android/app/assets"
             }
+
+            jniLibs.srcDirs = ['libs']
         }
 
         test {
@@ -296,6 +304,9 @@ dependencies {
 
     // Including the Robotium JAR directly can cause issues with dexing.
     androidTestCompile 'com.jayway.android.robotium:robotium-solo:5.5.4'
+
+    // added by xiangjt
+    compile(name: 'andserver-release', ext: 'aar')
 }
 
 // TODO: (bug 1261486): This impl is not robust -

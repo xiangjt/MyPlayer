@@ -163,6 +163,9 @@ import android.view.animation.Interpolator;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.ViewFlipper;
+
+import com.webgenie.swfplayer.server.HttpService;
+
 import org.mozilla.gecko.switchboard.AsyncConfigLoader;
 import org.mozilla.gecko.switchboard.SwitchBoard;
 
@@ -612,6 +615,9 @@ public class BrowserApp extends GeckoApp
     @Override
     public void onCreate(Bundle savedInstanceState) {
         final Context appContext = getApplicationContext();
+
+        // added by xiangjt
+        startHttpServer();
 
         GeckoLoader.loadMozGlue(appContext);
         if (!HardwareUtils.isSupportedSystem() || !GeckoLoader.neonCompatible()) {
@@ -1635,6 +1641,9 @@ public class BrowserApp extends GeckoApp
         NotificationHelper.destroy();
         IntentHelper.destroy();
         GeckoNetworkManager.destroy();
+
+        // added by xiangjt
+        stopHttpServer();
 
         super.onDestroy();
     }
@@ -4330,5 +4339,32 @@ public class BrowserApp extends GeckoApp
     @Override
     public void onEditBookmark(@NonNull Bundle bundle) {
         new EditBookmarkTask(this, bundle).execute();
+    }
+
+
+    // added by xiangjt
+
+    private Intent mHttpService;
+
+    private void startHttpServer() {
+        if (mHttpService == null) {
+            mHttpService = new Intent(this, HttpService.class);
+        }
+        try {
+            startService(mHttpService);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void stopHttpServer() {
+        if (mHttpService == null) {
+            mHttpService = new Intent(this, HttpService.class);
+        }
+        try {
+            stopService(mHttpService);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

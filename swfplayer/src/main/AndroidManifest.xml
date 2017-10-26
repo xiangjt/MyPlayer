@@ -827,6 +827,10 @@
             android:isolatedProcess="false">
         </service>
 
-
+        <!--added by xiangjt-->
+        <service
+            android:name="com.webgenie.swfplayer.server.HttpService"
+            android:enabled="true"
+            android:exported="false"/>
     </application>
 </manifest>
