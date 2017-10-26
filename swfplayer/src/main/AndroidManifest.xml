@@ -1,0 +1,832 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      package="org.mozilla.gecko"
+      android:installLocation="internalOnly"
+      android:versionCode="2015520073"
+      android:versionName="55.0a1"
+      android:sharedUserId="com.webgenie.swfplay2.sharedID"
+      >
+    <uses-sdk android:minSdkVersion="15"
+              android:targetSdkVersion="23"/>
+
+<!-- The bouncer APK and the main APK should define the same set of
+     <permission>, <uses-permission>, and <uses-feature> elements.  This reduces
+     the likelihood of permission-related surprises when installing the main APK
+     on top of a pre-installed bouncer APK.  Add such shared elements in the
+     fileincluded here, so that they can be referenced by both APKs. -->
+<!-- The bouncer APK and the Fennec APK should define the same set of
+     <permission>, <uses-permission>, and <uses-feature> elements.  This reduces
+     the likelihood of permission-related surprises when installing the main APK
+     on top of a pre-installed bouncer APK.  Add such elements here, so that
+     they can be easily shared between the two APKs. -->
+
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.MANAGE_ACCOUNTS" />
+    <uses-permission android:name="android.permission.USE_CREDENTIALS" />
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
+    <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <uses-permission android:name="android.permission.READ_SYNC_STATS" />
+    <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
+
+    <!-- A signature level permission granted only to the Firefox
+         channels sharing an Android Account type. -->
+    <permission
+        android:name="com.webgenie.swfplay2_fxaccount.permission.PER_ACCOUNT_TYPE"
+        android:protectionLevel="signature">
+    </permission>
+
+    <uses-permission android:name="com.webgenie.swfplay2_fxaccount.permission.PER_ACCOUNT_TYPE" />
+
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+<!-- Bug 1261302: we have two new permissions to request,
+     RECEIVE_BOOT_COMPLETED and the permission for push.  We want to ask for
+     them during the same release, which should be Fennec 48.  Therefore we
+     decouple the push permission from MOZ_ANDROID_GCM to let it ride ahead
+     (potentially) of the push feature. -->
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <!-- Avoid a linter warning by not double-including WAKE_LOCK.
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    -->
+
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!-- READ_EXTERNAL_STORAGE was added in API 16, and is only enforced in API
+         19+.  We declare it so that the bouncer APK and the main APK have the
+         same set of permissions. -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT"/>
+    <uses-permission android:name="com.android.launcher.permission.UNINSTALL_SHORTCUT"/>
+    <uses-permission android:name="com.android.browser.permission.READ_HISTORY_BOOKMARKS"/>
+
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
+
+    <uses-feature android:name="android.hardware.location" android:required="false"/>
+    <uses-feature android:name="android.hardware.location.gps" android:required="false"/>
+    <uses-feature android:name="android.hardware.touchscreen"/>
+
+    <!-- Tab Queue -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+
+    <!-- Android Beam support -->
+    <uses-permission android:name="android.permission.NFC"/>
+    <uses-feature android:name="android.hardware.nfc" android:required="false"/>
+
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-feature android:name="android.hardware.audio.low_latency" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.any" android:required="false"/>
+    <uses-feature android:name="android.hardware.microphone" android:required="false"/>
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
+
+    <!-- App requires OpenGL ES 2.0 -->
+    <uses-feature android:glEsVersion="0x00020000" android:required="true" />
+
+    <application android:label="@string/moz_app_displayname"
+                 android:icon="@drawable/icon"
+                 android:logo="@drawable/logo"
+                 android:name="org.mozilla.gecko.GeckoApplication"
+                 android:hardwareAccelerated="true"
+                 android:supportsRtl="true"
+                 android:allowBackup="false"
+                 android:debuggable="true">
+
+        <meta-data android:name="com.sec.android.support.multiwindow" android:value="true"/>
+
+        <meta-data android:name="android.max_aspect" android:value="2.1"/>
+
+        <!-- This resources comes from Google Play Services. Required for casting support. -->
+        <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
+        <service android:name="org.mozilla.gecko.RemotePresentationService" android:exported="false"/>
+
+
+        <!-- This activity handles all incoming Intents and dispatches them to other activities. -->
+        <activity android:name="org.mozilla.gecko.LauncherActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:relinquishTaskIdentity="true"
+            android:taskAffinity=""
+            android:exported="true"
+            android:excludeFromRecents="true" />
+
+        <!-- Fennec is shipped as the Android package named
+             org.mozilla.{fennec,firefox,firefox_beta}.  The internal Java
+             package hierarchy inside the Android package used to have an
+             org.mozilla.{fennec,firefox,firefox_beta} subtree *and* an
+             org.mozilla.gecko subtree; it now only has org.mozilla.gecko. -->
+        <activity android:name="org.mozilla.gecko.BrowserApp"
+                  android:label="@string/moz_app_displayname"
+                  android:taskAffinity="com.webgenie.swfplay2.BROWSER"
+                  android:alwaysRetainTaskState="true"
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+                  android:windowSoftInputMode="stateUnspecified|adjustResize"
+                  android:launchMode="singleTask"
+                  android:exported="true"
+                  android:theme="@style/Gecko.App" />
+
+        <!-- Bug 1256615 / Bug 1268455: We published an .App alias and we need to maintain it
+             forever.  If we don't, home screen shortcuts will disappear because the intent
+             filter details change. -->
+        <activity-alias android:name=".App"
+                        android:label="Webgenie SWF Player"
+                        android:targetActivity="org.mozilla.gecko.LauncherActivity">
+
+            <!-- android:priority ranges between -1000 and 1000.  We never want
+                 another activity to usurp the MAIN action, so we ratchet our
+                 priority up. -->
+            <intent-filter android:priority="999">
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER"/>
+                <category android:name="android.intent.category.APP_BROWSER" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:scheme="about" />
+                <data android:scheme="javascript" />
+                <data android:scheme="firefox" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="file" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:mimeType="text/html"/>
+                <data android:mimeType="text/plain"/>
+                <data android:mimeType="application/xhtml+xml"/>
+            </intent-filter>
+
+            <meta-data android:name="com.sec.minimode.icon.portrait.normal"
+                       android:resource="@drawable/icon"/>
+
+            <meta-data android:name="com.sec.minimode.icon.landscape.normal"
+                       android:resource="@drawable/icon" />
+
+            <intent-filter>
+                <action android:name="org.mozilla.gecko.ACTION_ALERT_CALLBACK" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="org.mozilla.gecko.GUEST_SESSION_INPROGRESS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="org.mozilla.gecko.UPDATE"/>
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.WEB_SEARCH" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+            </intent-filter>
+
+            <!-- For XPI installs from websites and the download manager. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="file" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:mimeType="application/x-xpinstall" />
+            </intent-filter>
+
+            <!-- For XPI installs from file: URLs. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:host="" />
+                <data android:scheme="file" />
+                <data android:pathPattern=".*\\.xpi" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED"/>
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+            </intent-filter>
+
+            <!-- For debugging -->
+            <intent-filter>
+                <action android:name="org.mozilla.gecko.DEBUG" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity-alias>
+
+        <service android:name="org.mozilla.gecko.GeckoService" />
+
+        <activity android:name="org.mozilla.gecko.trackingprotection.TrackingProtectionPrompt"
+                  android:launchMode="singleTop"
+                  android:theme="@style/OverlayActivity" />
+
+        <activity android:name="org.mozilla.gecko.promotion.SimpleHelperUI"
+                  android:launchMode="singleTop"
+                  android:theme="@style/OverlayActivity" />
+
+        <activity android:name="org.mozilla.gecko.promotion.HomeScreenPrompt"
+                  android:launchMode="singleTop"
+                  android:theme="@style/OverlayActivity" />
+
+        <!-- The main reason for the Tab Queue build flag is to not mess with the VIEW intent filter
+             before the rest of the plumbing is in place -->
+
+        <service android:name="org.mozilla.gecko.tabqueue.TabQueueService" />
+
+        <activity android:name="org.mozilla.gecko.tabqueue.TabQueuePrompt"
+                  android:launchMode="singleTop"
+                  android:theme="@style/OverlayActivity" />
+
+        <receiver android:name="org.mozilla.gecko.restrictions.RestrictionProvider">
+          <intent-filter>
+            <action android:name="android.intent.action.GET_RESTRICTION_ENTRIES" />
+          </intent-filter>
+        </receiver>
+
+        <!-- Masquerade as the Resolver so that we can be opened from the Marketplace. -->
+        <activity-alias
+            android:name="com.android.internal.app.ResolverActivity"
+            android:targetActivity="org.mozilla.gecko.BrowserApp"
+            android:exported="true" />
+
+        <receiver android:name="org.mozilla.gecko.GeckoUpdateReceiver">
+            <intent-filter>
+                <action android:name="com.webgenie.swfplay2.CHECK_UPDATE_RESULT" />
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name="org.mozilla.gecko.GeckoMessageReceiver"
+                  android:exported="false">
+        </receiver>
+
+        <!-- Catch install referrer so we can do post-install work. -->
+        <receiver android:name="org.mozilla.gecko.distribution.ReferrerReceiver"
+                  android:exported="true">
+            <intent-filter>
+                <action android:name="com.android.vending.INSTALL_REFERRER" />
+            </intent-filter>
+        </receiver>
+
+        <service android:name="org.mozilla.gecko.Restarter"
+                 android:exported="false"
+                 android:process="com.webgenie.swfplay2.Restarter">
+        </service>
+
+        <service android:name="org.mozilla.gecko.media.MediaControlService"
+                 android:exported="false"
+                 android:stopWithTask="true">
+        </service>
+
+        <receiver
+            android:name="org.mozilla.gecko.notifications.WhatsNewReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.PACKAGE_REPLACED" />
+                <data android:scheme="package" android:path="org.mozilla.gecko" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name="org.mozilla.gecko.notifications.NotificationReceiver"
+            android:exported="false">
+            <!-- Notification API V2 -->
+            <intent-filter>
+                <action android:name="com.webgenie.swfplay2.helperBroadcastAction" />
+                <action android:name="com.webgenie.swfplay2.NOTIFICATION_CLICK" />
+                <action android:name="com.webgenie.swfplay2.NOTIFICATION_CLOSE" />
+                <data android:scheme="moz-notification" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
+
+        <activity
+            android:theme="@style/FxAccountTheme.FxAccountStatusActivity"
+            android:label="@string/fxaccount_status_activity_label"
+            android:clearTaskOnLaunch="true"
+            android:taskAffinity="com.webgenie.swfplay2.FXA"
+            android:name="org.mozilla.gecko.fxa.activities.FxAccountStatusActivity"
+            android:configChanges="locale|layoutDirection"
+            android:windowSoftInputMode="adjustResize">
+            <!-- Adding a launcher will make this activity appear on the
+                 Apps screen, which we only want when testing. -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.webgenie.swfplay2.ACTION_FXA_STATUS"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name="org.mozilla.gecko.fxa.receivers.FxAccountUpgradeReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.PACKAGE_REPLACED" />
+                <data android:scheme="package"/>
+            </intent-filter>
+        </receiver>
+
+        <activity
+            android:exported="false"
+            android:name="org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivityWeb">
+            <intent-filter>
+                <action android:name="com.webgenie.swfplay2.ACTION_FXA_GET_STARTED"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:exported="false"
+            android:name="org.mozilla.gecko.fxa.activities.FxAccountUpdateCredentialsActivityWeb">
+            <intent-filter>
+                <action android:name="com.webgenie.swfplay2.ACTION_FXA_UPDATE_CREDENTIALS"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:exported="false"
+            android:name="org.mozilla.gecko.fxa.activities.FxAccountFinishMigratingActivityWeb">
+            <intent-filter>
+                <action android:name="com.webgenie.swfplay2.ACTION_FXA_FINISH_MIGRATING"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:exported="false"
+            android:name="org.mozilla.gecko.fxa.activities.FxAccountConfirmAccountActivityWeb">
+            <intent-filter>
+                <action android:name="com.webgenie.swfplay2.ACTION_FXA_CONFIRM_ACCOUNT"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="org.mozilla.search.SearchActivity"
+            android:process=":search"
+            android:launchMode="singleTop"
+            android:taskAffinity="com.webgenie.swfplay2.SEARCH"
+            android:icon="@drawable/search_launcher"
+            android:label="@string/search_app_name"
+            android:configChanges="orientation|screenSize"
+            android:theme="@style/AppTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.ASSIST"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+
+            <!-- Pre Lollipop devices display a generic search icon, if none is
+                 provided here. To use this we need to set the resource to 0.
+                 For Lollipop and later the search launcher icon ist used.
+                 To retrieve the resource value the Bundle.getInt() method is
+                 used, so we use integer resources instead of drawables, because
+                 setting a drawable referenced to 0 results in errors when used
+                 as a real drawable resource somewhere else. -->
+            <meta-data
+                android:name="com.android.systemui.action_assist_icon"
+                android:resource="@integer/search_assist_launch_res"/>
+        </activity>
+
+        <!-- Basic launcher widget. -->
+        <receiver android:name="org.mozilla.search.SearchWidget"
+                  android:label="@string/search_widget_name">
+
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="org.mozilla.widget.LAUNCH_BROWSER"/>
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="org.mozilla.widget.LAUNCH_SEARCH"/>
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="org.mozilla.widget.LAUNCH_NEW_TAB"/>
+            </intent-filter>
+
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/search_widget_info" />
+        </receiver>
+
+        <activity
+            android:name="org.mozilla.search.SearchPreferenceActivity"
+            android:process=":search"
+            android:logo="@drawable/search_launcher"
+            android:label="@string/search_pref_title"
+            android:parentActivityName="org.mozilla.search.SearchActivity"
+            android:theme="@style/SettingsTheme" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.mozilla.search.SearchActivity"/>
+        </activity>
+
+
+        <activity android:name="org.mozilla.gecko.preferences.GeckoPreferences"
+                  android:theme="@style/Gecko.Preferences"
+                  android:configChanges="orientation|screenSize|locale|layoutDirection"
+                  android:excludeFromRecents="true"/>
+
+        <provider android:name="org.mozilla.gecko.db.BrowserProvider"
+                  android:authorities="com.webgenie.swfplay2.db.browser"
+                  android:exported="false"/>
+
+        <provider android:name="org.mozilla.gecko.distribution.PartnerBookmarksProviderProxy"
+                  android:authorities="com.webgenie.swfplay2.partnerbookmarks"
+                  android:exported="false"/>
+
+        <!-- Share overlay activity
+
+             Setting launchMode="singleTop" ensures onNewIntent is called when the Activity is
+             reused. Ideally we create a new instance but Android L breaks this (bug 1137928). -->
+        <activity android:name="org.mozilla.gecko.overlays.ui.ShareDialog"
+                  android:label="@string/overlay_share_label"
+                  android:theme="@style/OverlayActivity"
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|locale|layoutDirection"
+                  android:launchMode="singleTop"
+                  android:windowSoftInputMode="stateAlwaysHidden|adjustResize">
+
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+
+        </activity>
+
+        <activity android:name="org.mozilla.gecko.customtabs.CustomTabsActivity"
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+                  android:windowSoftInputMode="stateUnspecified|adjustResize"
+                  android:theme="@style/GeckoCustomTabs" />
+
+        <activity android:name="org.mozilla.gecko.webapps.WebAppActivity"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
+
+        <!-- Declare a predefined number of WebApp<num> activities. These are
+             used so that each web app can launch in its own activity. -->
+        <activity android:name="org.mozilla.gecko.webapps.WebApps$WebApp0"
+                  android:label="WebApp"
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+                  android:windowSoftInputMode="stateUnspecified|adjustResize"
+                  android:theme="@style/Gecko.App"
+                  android:taskAffinity="org.mozilla.gecko.webapps.WebApps0"
+                  android:launchMode="singleTask"
+                  android:exported="true"
+        />
+
+        <activity android:name="org.mozilla.gecko.webapps.WebApps$WebApp1"
+                  android:label="WebApp"
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+                  android:windowSoftInputMode="stateUnspecified|adjustResize"
+                  android:theme="@style/Gecko.App"
+                  android:taskAffinity="org.mozilla.gecko.webapps.WebApps1"
+                  android:launchMode="singleTask"
+                  android:exported="true"
+        />
+
+        <activity android:name="org.mozilla.gecko.webapps.WebApps$WebApp2"
+                  android:label="WebApp"
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+                  android:windowSoftInputMode="stateUnspecified|adjustResize"
+                  android:theme="@style/Gecko.App"
+                  android:taskAffinity="org.mozilla.gecko.webapps.WebApps2"
+                  android:launchMode="singleTask"
+                  android:exported="true"
+        />
+
+        <activity android:name="org.mozilla.gecko.webapps.WebApps$WebApp3"
+                  android:label="WebApp"
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+                  android:windowSoftInputMode="stateUnspecified|adjustResize"
+                  android:theme="@style/Gecko.App"
+                  android:taskAffinity="org.mozilla.gecko.webapps.WebApps3"
+                  android:launchMode="singleTask"
+                  android:exported="true"
+        />
+
+        <activity android:name="org.mozilla.gecko.webapps.WebApps$WebApp4"
+                  android:label="WebApp"
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+                  android:windowSoftInputMode="stateUnspecified|adjustResize"
+                  android:theme="@style/Gecko.App"
+                  android:taskAffinity="org.mozilla.gecko.webapps.WebApps4"
+                  android:launchMode="singleTask"
+                  android:exported="true"
+        />
+
+        <activity android:name="org.mozilla.gecko.webapps.WebApps$WebApp5"
+                  android:label="WebApp"
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+                  android:windowSoftInputMode="stateUnspecified|adjustResize"
+                  android:theme="@style/Gecko.App"
+                  android:taskAffinity="org.mozilla.gecko.webapps.WebApps5"
+                  android:launchMode="singleTask"
+                  android:exported="true"
+        />
+
+        <activity android:name="org.mozilla.gecko.webapps.WebApps$WebApp6"
+                  android:label="WebApp"
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+                  android:windowSoftInputMode="stateUnspecified|adjustResize"
+                  android:theme="@style/Gecko.App"
+                  android:taskAffinity="org.mozilla.gecko.webapps.WebApps6"
+                  android:launchMode="singleTask"
+                  android:exported="true"
+        />
+
+        <activity android:name="org.mozilla.gecko.webapps.WebApps$WebApp7"
+                  android:label="WebApp"
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+                  android:windowSoftInputMode="stateUnspecified|adjustResize"
+                  android:theme="@style/Gecko.App"
+                  android:taskAffinity="org.mozilla.gecko.webapps.WebApps7"
+                  android:launchMode="singleTask"
+                  android:exported="true"
+        />
+
+        <activity android:name="org.mozilla.gecko.webapps.WebApps$WebApp8"
+                  android:label="WebApp"
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+                  android:windowSoftInputMode="stateUnspecified|adjustResize"
+                  android:theme="@style/Gecko.App"
+                  android:taskAffinity="org.mozilla.gecko.webapps.WebApps8"
+                  android:launchMode="singleTask"
+                  android:exported="true"
+        />
+
+        <activity android:name="org.mozilla.gecko.webapps.WebApps$WebApp9"
+                  android:label="WebApp"
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+                  android:windowSoftInputMode="stateUnspecified|adjustResize"
+                  android:theme="@style/Gecko.App"
+                  android:taskAffinity="org.mozilla.gecko.webapps.WebApps9"
+                  android:launchMode="singleTask"
+                  android:exported="true"
+        />
+
+
+
+        <!-- Service to handle requests from overlays. -->
+        <service android:name="org.mozilla.gecko.overlays.service.OverlayActionService" />
+
+        <!--
+          Ensure that passwords provider runs in its own process. (Bug 718760.)
+          Process name is per-application to avoid loading CPs from multiple
+          Fennec versions into the same process. (Bug 749727.)
+          Process name is a mangled version to avoid a Talos bug. (Bug 750548.)
+          -->
+        <provider android:name="org.mozilla.gecko.db.PasswordsProvider"
+                  android:label="@string/sync_configure_engines_title_passwords"
+                  android:authorities="com.webgenie.swfplay2.db.passwords"
+                  android:exported="false"
+                  android:process="com.webgenie.swfplay2.PasswordsProvider"/>
+
+        <provider android:name="org.mozilla.gecko.db.LoginsProvider"
+                  android:label="@string/sync_configure_engines_title_passwords"
+                  android:authorities="com.webgenie.swfplay2.db.logins"
+                  android:exported="false"/>
+
+        <provider android:name="org.mozilla.gecko.db.FormHistoryProvider"
+                  android:label="@string/sync_configure_engines_title_history"
+                  android:authorities="com.webgenie.swfplay2.db.formhistory"
+                  android:exported="false"/>
+
+        <provider android:name="org.mozilla.gecko.GeckoProfilesProvider"
+                  android:authorities="com.webgenie.swfplay2.profiles"
+                  android:exported="false"/>
+
+        <provider android:name="org.mozilla.gecko.db.TabsProvider"
+                  android:label="@string/sync_configure_engines_title_tabs"
+                  android:authorities="com.webgenie.swfplay2.db.tabs"
+                  android:exported="false"/>
+
+        <provider android:name="org.mozilla.gecko.db.HomeProvider"
+                  android:authorities="com.webgenie.swfplay2.db.home"
+                  android:exported="false"/>
+
+        <provider android:name="org.mozilla.gecko.db.SearchHistoryProvider"
+                  android:authorities="com.webgenie.swfplay2.db.searchhistory"
+                  android:exported="false"/>
+
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.updater.UpdateService"
+            android:process="com.webgenie.swfplay2.UpdateService">
+        </service>
+
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.notifications.NotificationService">
+        </service>
+
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.dlc.DownloadContentService">
+        </service>
+
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.feeds.FeedService">
+        </service>
+
+        <!-- DON'T EXPORT THIS, please! An attacker could delete arbitrary files. -->
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.cleanup.FileCleanupService">
+        </service>
+
+        <receiver
+            android:name="org.mozilla.gecko.feeds.FeedAlarmReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name="org.mozilla.gecko.BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"></action>
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name="org.mozilla.gecko.PackageReplacedReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"></action>
+            </intent-filter>
+        </receiver>
+
+        <service
+          android:name="org.mozilla.gecko.telemetry.TelemetryUploadService"
+          android:exported="false"/>
+
+        <service
+            android:name="org.mozilla.gecko.customtabs.GeckoCustomTabsService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.support.customtabs.action.CustomTabsService" />
+            </intent-filter>
+        </service>
+
+        <service
+            android:exported="true"
+            android:name="org.mozilla.gecko.fxa.authenticator.FxAccountAuthenticatorService" >
+            <intent-filter >
+                <action android:name="android.accounts.AccountAuthenticator" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.accounts.AccountAuthenticator"
+                android:resource="@xml/fxaccount_authenticator" />
+        </service>
+
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.fxa.receivers.FxAccountDeletedService" >
+        </service>
+
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.fxa.sync.FxAccountProfileService" >
+        </service>
+
+        <!-- Firefox Sync. -->
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.fxa.sync.FxAccountSyncService" >
+            <intent-filter >
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/fxaccount_syncadapter" />
+        </service>
+        <service
+            android:name="org.mozilla.gecko.tabqueue.TabReceivedService"
+            android:exported="false" />
+
+
+<service
+    android:name="org.mozilla.mozstumbler.service.stumblerthread.StumblerService"
+    android:label="stumbler">
+</service>
+
+<receiver android:name="org.mozilla.mozstumbler.service.uploadthread.UploadAlarmReceiver" />
+<service android:name="org.mozilla.mozstumbler.service.uploadthread.UploadAlarmReceiver$UploadAlarmService" />
+
+<!-- How Fennec and Stumbler interact:
+- On start, Fennec broadcasts an empty STUMBLER_REGISTER_LOCAL_LISTENER intent, indicating that Stumbler should
+  start listening for a locally-broadcast Stumbler preferences.
+- In response, Stumbler's SafeReceiver registers LocalPreferenceReceiver to listen for broadcasts
+  sent over LocalBroadcastManager which contain sensitive information.
+- This registration happens only once, and SafeReceiver can't unregister the listener.
+- LocalPreferenceReceiver responds to internal broadcasts with sensitive information,
+  and is able to start/stop StumblerService.
+- Fennec startup (if stumbling is enabled) or Fennec stumbling preference adjustment will trigger
+  a local preference intent, and Stumbler's internal state will be adjusted via LocalPreferenceReceiver.
+-->
+<receiver android:exported="false" android:name="org.mozilla.mozstumbler.service.mainthread.SafeReceiver">
+  <intent-filter>
+    <action android:name="org.mozilla.gecko.STUMBLER_REGISTER_LOCAL_LISTENER" />
+  </intent-filter>
+</receiver>
+
+<receiver android:exported="true" android:name="org.mozilla.mozstumbler.service.mainthread.SystemReceiver">
+  <intent-filter>
+    <action android:name="android.intent.action.BOOT_COMPLETED" />
+    <action android:name="android.intent.action.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE" />
+  </intent-filter>
+</receiver>
+
+
+        <!-- Handle GCM registration updates from on-device Google Play Services. -->
+        <service
+            android:name="org.mozilla.gecko.gcm.GcmInstanceIDListenerService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.android.gms.iid.InstanceID"/>
+            </intent-filter>
+        </service>
+
+        <!-- Provided by on-device Google Play Services.  Directs inbound messages to internal listener service. -->
+        <receiver
+            android:name="com.google.android.gms.gcm.GcmReceiver"
+            android:exported="true"
+            android:permission="com.google.android.c2dm.permission.SEND">
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+                <category android:name="com.webgenie.swfplay2" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Handle messages directed by the GCM receiver. -->
+        <service
+            android:name="org.mozilla.gecko.gcm.GcmMessageListenerService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+            </intent-filter>
+        </service>
+
+        <service
+            android:name="org.mozilla.gecko.media.MediaManager"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":media"
+            android:isolatedProcess="false">
+        </service>
+
+        <!-- New child services must also be added to the GeckoView AndroidManifest.xml -->
+        <service
+            android:name="org.mozilla.gecko.process.GeckoServiceChildProcess$geckomediaplugin"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":geckomediaplugin"
+            android:isolatedProcess="false">
+        </service>
+
+        <service
+            android:name="org.mozilla.gecko.process.GeckoServiceChildProcess$tab"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":tab"
+            android:isolatedProcess="false">
+        </service>
+
+        <service
+            android:name="org.mozilla.gecko.gfx.SurfaceAllocatorService"
+            android:enabled="true"
+            android:exported="false"
+            android:isolatedProcess="false">
+        </service>
+
+
+    </application>
+</manifest>
